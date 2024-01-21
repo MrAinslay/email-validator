@@ -31,7 +31,12 @@ func checkDomain(domain string) {
 		hasMX = true
 	}
 
-	net.LookupTXT(domain)
+	txtRecords, err := net.LookupTXT(domain)
+	checkErr("Error", err)
+
+	for _, rcord := range txtRecords {
+
+	}
 }
 
 func checkErr(msg string, err error) {
