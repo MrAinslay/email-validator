@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -13,6 +14,9 @@ func main() {
 	fmt.Printf("domain, hasMX, hasSPF, sprRecord, hasDMARC, dmarcRecord\n")
 
 	for scanner.Scan() {
+		if scanner.Text() == "" {
+			os.Exit(1)
+		}
 		checkDomain(scanner.Text())
 	}
 
@@ -34,9 +38,25 @@ func checkDomain(domain string) {
 	txtRecords, err := net.LookupTXT(domain)
 	checkErr("Error", err)
 
-	for _, rcord := range txtRecords {
-
+	for _, record := range txtRecords {
+		if strings.HasPrefix(record, "v=spf1") {
+			hasSPF = true
+			spfRecord = record
+			break
+		}
 	}
+
+	dmarcRecords, err := net.LookupTXT("_dmarc." + domain)
+	checkErr("Error", err)
+
+	for _, record := range dmarcRecords {
+		if strings.HasPrefix(record, "v=DMARC1") {
+			hasDMARC = true
+			dmarcRecord = record
+			break
+		}
+	}
+	log.Printf("%v, %v, %v, %v, %v, %v", domain, hasMX, hasSPF, spfRecord, hasDMARC, dmarcRecord)
 }
 
 func checkErr(msg string, err error) {
